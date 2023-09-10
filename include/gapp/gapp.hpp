@@ -187,7 +187,7 @@ std::vector<individual::Individual<GeneType, FitnessType>> k_points(const indivi
 
     if((k_points%2) != 0)
     {
-        std::swap_ranges(ret[0].gene.begin()+indices.back(), ret[0].gene.end(), ret[1].gene.begin()+indices.back());
+        std::swap_ranges(ret[0].gene.begin()+indices[k_points-1], ret[0].gene.end(), ret[1].gene.begin()+indices[k_points-1]);
     }
 
     return ret;
