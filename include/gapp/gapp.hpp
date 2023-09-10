@@ -35,12 +35,14 @@ individual::Individual<GeneType, FitnessType> tournament(const std::vector<indiv
 
     std::vector<Individual*> pointers(population.size());
 
+    // Initialize pointer list
+    // p[0] = &(population[0]), p[1] = &(population[1]), ...
     for(std::size_t i = 0; i < pointers.size(); i ++)
     {
         pointers[i] = const_cast<Individual*>(population.data()) + i;
     }
 
-    // Fisher-Yates
+    // Random sampling without replacement using Fisher-Yates algorithm
     std::vector<std::size_t> temp_indices(population.size());
 
     for(std::size_t i = 0; i < tournament_size; i ++)
@@ -86,7 +88,7 @@ std::vector<individual::Individual<GeneType, FitnessType>> select_random_k(const
         temp_indices[i] = i;
     }
 
-    // Fisher-Yates
+    // Random sampling without replacement using Fisher-Yates algorithm
     for(std::size_t i = 0; i < select_size; i ++)
     {
         std::uniform_int_distribution<std::size_t> distribution(i, population.size()-1);
@@ -110,7 +112,8 @@ std::vector<individual::Individual<GeneType, FitnessType>> select_best_k(const s
 
     std::vector<Individual*> pointers(population.size());
 
-    // ポインタ配列を作成
+    // Initialize pointer list
+    // p[0] = &(population[0]), p[1] = &(population[1]), ...
     for(std::size_t i = 0; i < pointers.size(); i ++)
     {
         pointers[i] = const_cast<Individual*>(population.data()) + i;
@@ -118,7 +121,7 @@ std::vector<individual::Individual<GeneType, FitnessType>> select_best_k(const s
 
     if(problem_type == ProblemType::MAXIMIZE)
     {
-        // fitnessが大きい順に上位select_size個のポインタを取得
+        // Select select_size pointers with the highest fitness
         std::nth_element(pointers.begin(), pointers.begin()+select_size, pointers.end(),
             [](const Individual* a, const Individual* b)
             {
@@ -127,6 +130,7 @@ std::vector<individual::Individual<GeneType, FitnessType>> select_best_k(const s
     }
     else
     {
+        // Select select_size pointers with the lower fitness
         std::nth_element(pointers.begin(), pointers.begin()+select_size, pointers.end(),
             [](const Individual* a, const Individual* b)
             {
@@ -156,8 +160,7 @@ std::vector<individual::Individual<GeneType, FitnessType>> k_points(const indivi
         indices[i] = i;
     }
 
-    // ランダムにk個のインデックスを選ぶ
-    // Fisher-Yates
+    // Random sampling without replacement using Fisher-Yates algorithm
     for(std::size_t i = 0; i < k_points; i ++)
     {
         std::uniform_int_distribution<std::size_t> distribution(i, a.gene.size()-1);
@@ -171,7 +174,7 @@ std::vector<individual::Individual<GeneType, FitnessType>> k_points(const indivi
         return ret;
     }
 
-    // k個(k>=2)のインデックスを昇順ソート
+    // Sort k indices in ascending order
     std::sort(indices.begin(), indices.begin()+k_points);
 
     // k_points=2: i=0
