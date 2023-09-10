@@ -29,61 +29,50 @@ class Individual
 namespace selection
 {
 template<typename GeneType, typename FitnessType, typename RandomEngine>
-std::vector<individual::Individual<GeneType, FitnessType>> tournament(const std::vector<individual::Individual<GeneType, FitnessType>>& population, const std::size_t select_size, const std::size_t tournament_size, const ProblemType problem_type, RandomEngine&& engine)
+individual::Individual<GeneType, FitnessType> tournament(const std::vector<individual::Individual<GeneType, FitnessType>>& population, const std::size_t tournament_size, const ProblemType problem_type, RandomEngine&& engine)
 {
-    std::vector<individual::Individual<GeneType, FitnessType>> ret(select_size);
+    using Individual = individual::Individual<GeneType, FitnessType>;
 
-    std::vector<std::size_t> default_temp_indices(population.size());
-    for(std::size_t i = 0; i < default_temp_indices.size(); i ++)
+    std::vector<Individual*> pointers(population.size());
+
+    for(std::size_t i = 0; i < pointers.size(); i ++)
     {
-        default_temp_indices[i] = i;
+        pointers[i] = const_cast<Individual*>(population.data()) + i;
     }
 
     // Fisher-Yates
     std::vector<std::size_t> temp_indices(population.size());
 
-    for(std::size_t i = 0; i < select_size; i ++)
+    for(std::size_t i = 0; i < tournament_size; i ++)
     {
-        std::memcpy(&(temp_indices[0]), &(default_temp_indices[0]), sizeof(std::size_t) * population.size());  // Initialize indices
+        std::uniform_int_distribution<std::size_t> distribution(i, pointers.size()-1);
+        std::size_t index = distribution(engine);
         
-        std::vector<individual::Individual<GeneType, FitnessType>> individuals(tournament_size);
-
-        for(std::size_t j = 0; j < tournament_size; j ++)
-        {
-            std::uniform_int_distribution<std::size_t> distribution(j, population.size()-1);
-            std::size_t index = distribution(engine);
-
-            individuals[j].gene = population[temp_indices[index]].gene;
-            individuals[j].fitness = population[temp_indices[index]].fitness;
-
-            std::swap(temp_indices[j], temp_indices[index]);
-        }
-
-        if(problem_type == ProblemType::MAXIMIZE)
-        {
-            // Find the individual with the highest fitness
-            auto best = std::max_element(individuals.begin(), individuals.end(),
-                [](const individual::Individual<GeneType, FitnessType>& a, const individual::Individual<GeneType, FitnessType>& b)
-                {
-                    return a.fitness < b.fitness;
-                });
-            
-            ret[i] = *best;
-        }
-        else
-        {
-            // Find the individual with the lowest fitness
-            auto best = std::min_element(individuals.begin(), individuals.end(),
-                [](const individual::Individual<GeneType, FitnessType>& a, const individual::Individual<GeneType, FitnessType>& b)
-                {
-                    return a.fitness < b.fitness;
-                });
-            
-            ret[i] = *best;
-        }
+        std::swap(pointers[i], pointers[index]);
     }
 
-    return ret;
+    if(problem_type == ProblemType::MAXIMIZE)
+    {
+        // Find the individual with the highest fitness
+        auto best = std::max_element(pointers.begin(), pointers.end(),
+            [](const Individual* a, const Individual* b)
+            {
+                return a->fitness < b->fitness;
+            });
+        
+        return *(*best);
+    }
+    else
+    {
+        // Find the individual with the lowest fitness
+        auto best = std::min_element(pointers.begin(), pointers.end(),
+            [](const Individual* a, const Individual* b)
+            {
+                return a->fitness < b->fitness;
+            });
+        
+        return *(*best);
+    }
 }
 
 template<typename GeneType, typename FitnessType, typename RandomEngine>
